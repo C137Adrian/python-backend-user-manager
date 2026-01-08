@@ -17,6 +17,12 @@ including data persistence, validation, and clean code principles.
 - Python 3.x
 - Standard Library only
 
+## Project Status
+
+In development — Day 1
+In development — Day 2
+In development — Day 3
+
 ## How to Run
 ```bash
 python app.py

@@ -4,7 +4,7 @@ User Management Backend Service (CLI-based)
 Description:
     Backend-style user management system implemented in Python.
     This project focuses on core backend concepts such as data modeling,
-    clean architecture, and maintainable code structure.
+    validation, error handling, and maintainable code structure.
 
 Author:
     Tu Nombre
@@ -21,21 +21,46 @@ User = Dict[str, str]
 users: List[User] = []
 
 
+class ValidationError(Exception):
+    """Custom exception for validation errors."""
+    pass
+
+
 def create_user(name: str, email: str) -> User:
     """
-    Create a user dictionary.
+    Create a validated user dictionary.
 
     Args:
         name (str): User full name
         email (str): User email address
 
     Returns:
-        User: A dictionary representing a user
+        User: A validated user dictionary
+
+    Raises:
+        ValidationError: If user data is invalid
     """
+    validate_name(name)
+    validate_email(email)
+
     return {
-        "name": name,
-        "email": email
+        "name": name.strip(),
+        "email": email.lower().strip()
     }
+
+
+def validate_name(name: str) -> None:
+    if not name or len(name.strip()) < 2:
+        raise ValidationError("Name must contain at least 2 characters")
+
+
+def validate_email(email: str) -> None:
+    if "@" not in email or "." not in email:
+        raise ValidationError("Invalid email format")
+
+
+def user_exists(email: str) -> bool:
+    return any(user["email"] == email for user in users)
 
 
 def add_user(user: User) -> None:
@@ -44,7 +69,13 @@ def add_user(user: User) -> None:
 
     Args:
         user (User): User dictionary
+
+    Raises:
+        ValidationError: If user already exists
     """
+    if user_exists(user["email"]):
+        raise ValidationError("User with this email already exists")
+
     users.append(user)
 
 
@@ -62,10 +93,17 @@ def run_app() -> None:
     """
     Entry point for the application.
     """
-    add_user(create_user("Juan Pérez", "juan.perez@email.com"))
-    add_user(create_user("Ana Gómez", "ana.gomez@email.com"))
+    try:
+        add_user(create_user("Juan Pérez", "juan.perez@email.com"))
+        add_user(create_user("Ana Gómez", "ana.gomez@email.com"))
 
-    print("Current users:")
+        # Intentional duplicate to demonstrate validation
+        add_user(create_user("Juan Pérez", "juan.perez@email.com"))
+
+    except ValidationError as error:
+        print(f"Validation error: {error}")
+
+    print("\nCurrent users:")
     for user in get_all_users():
         print(user)
 
